@@ -1,3 +1,12 @@
+[![NPM Version](https://img.shields.io/npm/v/@imed.ch/buffer-io.svg)](https://npmjs.org/package/@imed.ch/buffer-io)
+[![Dependency Status](https://david-dm.org/jguillod/buffer-io.svg?style=flat)](https://david-dm.org/jguillod/buffer-io)
+[![devDependency Status](https://img.shields.io/david/dev/jguillod/buffer-io.svg?style=flat)](https://david-dm.org/jguillod/buffer-io#info=devDependencies)
+[![Coverage Status](https://coveralls.io/repos/github/jguillod/buffer-io/badge.svg?branch=master)](https://coveralls.io/github/jguillod/buffer-io?branch=master)
+[![NPM](https://img.shields.io/github/license/jguillod/buffer-io.svg)](LICENSE)
+
+> [![Build Status](https://travis-ci.com/jguillod/buffer-io.svg?branch=master)](https://travis-ci.com/jguillod/buffer-io)
+
+
 # @imed.ch/buffer-io
 On github at [buffer-io](https://github.com/jguillod/buffer-io).
 
