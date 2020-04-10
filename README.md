@@ -273,10 +273,9 @@ where type is describes in the [Functions list](#Functions_List) §.
 npm test
 ```
 
-## Support or just a greeting !
+## Enjoying ##
 
-Enyjoy, fill an issue when appropriate! If you'd like you can support the freelancer I am via&nbsp;:
-
+Enjoy! Also, please fill an issue when appropriate! If you'd like to offer me a coffee&nbsp;:
 [![click me](https://ko-fi.com/img/Kofi_Logo_Blue.svg)](https://ko-fi.com/elojes)
 
 ## ABOUT ME ##
