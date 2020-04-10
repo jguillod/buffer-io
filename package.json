@@ -1,6 +1,6 @@
 {
   "name": "@imed.ch/buffer-io",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "Buffer reader and writer utility",
   "author": {
     "name": "Joël F Guillod",
@@ -21,7 +21,7 @@
     "generate-docs": "jsdoc --configure jsdoc.json --verbose",
     "show-docs": "node docs/index",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
-    "test": "nyc mocha \"test/**/*.js\""
+    "test": "nyc mocha 'test/**/*.js' --timeout 5000"
   },
   "dependencies": {
     "ieee754": "1.1.13"
