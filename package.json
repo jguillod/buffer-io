@@ -1,26 +1,41 @@
 {
-  "name": "@imed.ch/clever-buffer",
-  "version": "3.0.8",
-  "description": "Buffer utilities",
-  "author": "imed.ch (original forked from Tabcorp Digital Technology Team, https://github.com/Tabcorp/clever-buffer.git)",
+  "name": "@imed.ch/buffer-io",
+  "version": "0.9.1",
+  "description": "Buffer reader and writer utility",
+  "author": {
+    "name": "Joël F Guillod",
+    "url": "http://imed.ch"
+  },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/jguillod/clever-buffer.git"
+    "url": "https://github.com/jguillod/buffer-io.git"
   },
   "bugs": {
-    "url": "https://github.com/jguillod/clever-buffer/issues"
+    "url": "https://github.com/jguillod/buffer-io/issues"
   },
-  "main": "src/clever-buffer.js",
+  "main": "src",
   "scripts": {
-    "test": "mocha \"test/**/*.js\""
+    "build": "npm test && npm run generate-docs",
+    "docs": "npm run generate-docs && npm run show-docs",
+    "generate-docs": "jsdoc --configure jsdoc.json --verbose",
+    "show-docs": "node docs/index",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "test": "nyc mocha \"test/**/*.js\""
   },
   "dependencies": {},
   "devDependencies": {
-    "should": "13.2.3",
-    "lodash": "4.17.15",
+    "chai": "4.2.0",
     "cli-table": "^0.3.1",
-    "pre-commit": "1.2.2"
+    "coverage": "0.4.1",
+    "coveralls": "3.0.11",
+    "jsdoc": "3.6.4",
+    "lodash": "4.17.15",
+    "minami": "1.2.3",
+    "mocha": "7.1.1",
+    "nyc": "15.0.1",
+    "pre-commit": "1.2.2",
+    "should": "13.2.3"
   },
   "pre-commit": [
     "test"

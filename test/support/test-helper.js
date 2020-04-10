@@ -1,22 +1,30 @@
-const {CleverBufferWriter} = require('../../');
+const {
+  BufferIOWriter
+} = require('../..');
 
-exports.writeToStupidBuffer = (values, numberOfBytesPerWord, writeFunction) => {
-  const buf = Buffer.alloc(values.length*numberOfBytesPerWord);
+module.exports = {
 
-  let offset = 0;
-  values.forEach((val) => {
-    writeFunction(buf, val, offset);
-    offset += numberOfBytesPerWord;
-  });
-  return buf;
-};
+  // NodeJS standard Buffer
+  writeToLegacyBuffer: (values, numberOfBytesPerWord, writeFunction) => {
+    const buf = Buffer.alloc(values.length * numberOfBytesPerWord);
 
-exports.writeToCleverBuffer = (values, numberOfBytesPerWord, bigEndian, writeFunction) => {
-  const cleverBufferWriter = new CleverBufferWriter(Buffer.alloc(values.length*numberOfBytesPerWord), {bigEndian});
+    let offset = 0;
+    values.forEach((val) => {
+      writeFunction(buf, val, offset);
+      offset += numberOfBytesPerWord;
+    });
+    return buf;
+  },
 
-  values.forEach((val) => {
-    writeFunction(cleverBufferWriter, val);
-  });
+  writeToBufferIO: (values, numberOfBytesPerWord, bigEndian, writeFunction) => {
+    const BufferWriter = new BufferIOWriter(Buffer.alloc(values.length * numberOfBytesPerWord), {
+      bigEndian
+    });
 
-  return cleverBufferWriter.getBuffer();
+    values.forEach((val) => {
+      writeFunction(BufferWriter, val);
+    });
+
+    return BufferWriter.getBuffer();
+  }
 };

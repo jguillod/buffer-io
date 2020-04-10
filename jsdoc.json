@@ -1,0 +1,28 @@
+{
+	"tags": {
+		"allowUnknownTags": false,
+		"dictionaries": ["jsdoc"]
+	},
+	"source": {
+		"include": [".", "README.md", "package.json", "test/"],
+		"includePattern": ".js$",
+		"excludePattern": "(buffer-io/node_modules/|docs|out|DEPRECATED|_template)"
+	},
+	"plugins": [
+		"plugins/markdown"
+	],
+	"templates": {
+		"cleverLinks": false,
+		"monospaceLinks": true,
+		"useLongnameInNav": false,
+		"showInheritedInNav": true
+	},
+	"opts": {
+		"destination": "./docs/",
+		"encoding": "utf8",
+		"private": false,
+		"recurse": true,
+		"template": "./node_modules/minami",
+		"title": "@imed.ch/buffer-io"
+	}
+}

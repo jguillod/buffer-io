@@ -1,174 +1,192 @@
-# @imed.ch/clever-buffer
-
-# DEPRECATED ! PLEASE ! DO NOT USE THIS FORK.
-
-> Since the source code was completely rewritten with a different API we stop this module.  
-Have a look to our module <a href="/jguillod/buffer-io">@imed.ch/buffer-io</a>.
+# @imed.ch/buffer-io
+On github at [buffer-io](https://github.com/jguillod/buffer-io).
 
 Buffer write and read utilities.
 
-CleverBuffer adds functionality that is missing from the node Buffer class
+BufferIO adds the following features to legacy [NodeJS Class Buffer](https://nodejs.org/api/buffer.html)&nbsp;:
 
-* Keeps track of the offset for you
-* One time specification of endian-ness and whether to assert on buffer length
+* A BufferIO reader or writer keeps track of the offset for you.
+* You can specify then default endian-ness when instanciating the buffer (but can still use the other).
 * 64 bit integer support. We dont use any non standard NodeJS 12.x dependencies.
+* Function names are&nbsp;:
+  * abbreviated to type name only (`read`and `write`prefix have been removed).
+  * aliased with a lowercase name (e.g. `UInt8` => `uint8`, `Int32BE` => `int32be`, …).
+* A writer buffer automatically expands when you write passed the end.
+
 ## Installation
 
-``` js
-npm install @imed.ch/clever-buffer
+    npm install @imed.ch/buffer-io
+
+
+## Usage ##
+
+```js
+const {
+    BufferIOReader,
+    BufferIOWriter,
+    types
+} = require('@imed.ch/buffer-io');
 ```
 
-_NOTE_: Examples below in javascript
+# Documentation
 
-## Reader Usage
+Build documentation with&nbsp;:
 
-#### Requiring the reader in your project
-``` js
-{ CleverBufferReader } = require('@imed.ch/clever-buffer');
+    npm run docs
+
+It will generate the documentation and open its html page. It's a shortcut of:
+
+    npm run generate-docs
+    npm run show-docs
+
+Last command should open file `./docs/@imed.ch/buffer-io/<version>/index.html` (e.g. `./docs/@imed.ch/buffer-io/1.0.0/index.html`) in your browser.
+
+
+## Common Features ##
+The following is common to `BufferIOReader` and `BufferIOWriter` (The examples only show reader).
+
+#### reader.offset | writer.offset
+Gets the current offset of the buffer
+```js
+var buf = Buffer.from([0xFF, 0x02]); // [255, 2]
+var reader = new BufferIOReader(buf);
+console.log(reader.offset); // 0
+reader.UInt8();  // => 255
+reader.uint8();  // => 2
+reader.uint8();
+// => throws RangeError [ERR_OUT_OF_RANGE]: The value of "offset" is out of range. It must be >= 0 and <= 1. Received 2
+reader.uint8(1);  // => 2
+reader.offset = 0;
+reader.UInt8();  // => 255
+
 ```
 
-#### new CleverBufferReader existingBuffer, [options]
-* existingBuffer Buffer
-* options
-  * offset Number, Optional, Default: 0
-  * bigEndian Boolean, Optional, Default: false
+Sets the current offset of the buffer  
+<small>In most case you will set `offset` in the `options` parameter of read/write functions. But it is possible to set it manually with&nbsp;:</small>
+```js
+reader.offset = 3;
+writer.offset = 4;
+```
+For a reader `offset` should be in range of `[0..reader.length-1]`.
 
-Allocates a new CleverBufferReader with an internal buffer of the specified existingBuffer
-``` js
-var reader = new CleverBufferReader(existingBuffer, { offset: 0, bigEndian: false});
+#### reader.eob() | writer.eob()
+This function returns `true` if offset is set passed the end of buffer.
+
+#### reader.skip(size) | writer.skip(size)
+* {number} size
+
+Skips the current offset forward the specified bytes amount
+
+```js
+var buf = Buffer.from([0xFF, 0x02]);
+var reader = new BufferIOReader(buf);
+console.log(reader.offset); // 0
+reader.skip(2);
+console.log(reader.offset); // 2  
 ```
 
-#### reader.getUInt8([offset])
-* offset Number, Optional, Default: current buffer position
+#### reader.skipTo(offset) | writer.skipTo(offset)
 
-Returns an Unsigned 8bit Integer from the current offset
+Alternate to `reader.offset = offset`.
+
+* {number} offset
+
+Skips to the specified offset
+
+```js
+var buf = Buffer.from([0xFF, 0xFF, 0xFF, 0x01]);
+var reader = new BufferIOReader(buf);
+console.log(reader.offset); // 0
+reader.skipTo(3); // same as : reader.offset = 3;
+console.log(reader.offset); // 3  
+```
+
+#### reader.Buffer() | writer.Buffer()
+Will return the underlying buffer so you can perform actions directly on it
+
+```js
+var buf = Buffer.from([0xFF, 0x02]);
+var reader = new BufferIOReader(buf);
+console.log(reader.Buffer()[1]); // 2
+```
+
+#### reader.trim() | writer.trim()
+Will return a buffer slice from the start of the buffer to the current offset
+
+```js
+var buf = Buffer.from([0xFF, 0x02]);
+var reader = new BufferIOReader(buf);
+reader.UInt8();
+console.log(reader.trim()); // [0xFF]
+console.log(buf);           // [0xFF, 0x02]
+```
+
+#### reader/writer.isRangeError(size, offset)
+
+```js
+if (!reader.isRangeError(size, offset)) data = reader.bytes({ length, offset });
+```
+
+#### Functions List ####
+
+This is the list of all functions to read and write data&nbsp;:
+
+`asstring`, ` AsString`, ` bigint64`, ` BigInt64`, ` bigint64be`, ` BigInt64BE`, ` bigint64le`, ` BigInt64LE`, ` biguint64`, ` BigUInt64`, ` biguint64be`, ` BigUInt64BE`, ` biguint64le`, ` BigUInt64LE`, ` bytes`, ` Bytes`, ` double`, ` Double`, ` doublebe`, ` DoubleBE`, ` doublele`, ` DoubleLE`, ` float`, ` Float`, ` float24_32`, ` Float24_32`, ` float24_32be`, ` Float24_32BE`, ` float24_32le`, ` Float24_32LE`, ` floatbe`, ` FloatBE`, ` floatle`, ` FloatLE`, ` int`, ` Int`, ` int16`, ` Int16`, ` int16be`, ` Int16BE`, ` int16le`, ` Int16LE`, ` int32`, ` Int32`, ` int32be`, ` Int32BE`, ` int32le`, ` Int32LE`, ` int64`, ` Int64`, ` int64be`, ` Int64BE`, ` int64le`, ` Int64LE`, ` int8`, ` Int8`, ` intbe`, ` IntBE`, ` intle`, ` IntLE`, ` sfloat12_16`, ` SFloat12_16`, ` sfloat12_16be`, ` SFloat12_16BE`, ` sfloat12_16le`, ` SFloat12_16LE`, ` uint`, ` UInt`, ` uint16`, ` UInt16`, ` uint16be`, ` UInt16BE`, ` uint16le`, ` UInt16LE`, ` uint32`, ` UInt32`, ` uint32be`, ` UInt32BE`, ` uint32le`, ` UInt32LE`, ` uint64`, ` UInt64`, ` uint64be`, ` UInt64BE`, ` uint64le`, ` UInt64LE`, ` uint8`, ` UInt8`, ` uintbe`, ` UIntBE`, ` uintle`, ` UIntLE`, ` utf8`, ` UTF8`
+
+This list can be query with:
+
+```js
+const { types } = require('@imed.ch/buffer-io');
+types(); // => list of functions
+
+// These are equivalent :
+reader.UInt8();
+reader.uint8();
+reader['UInt8']();
+reader['uint8']();
+let type = 'uint8';
+reader[type]();
+```
+
+>CAVEAT : Documentation below may not be complete but you find description of most function in the `Buffer.read<type>` and `Buffer.write<type>` in [NodeJS documentation](https://nodejs.org/api/buffer.html#buffer_buf_readbigint64be_offset).
+
+
+
+### Reader Usage
+
+#### new BufferIOReader existingBuffer, [options]
+
+Instanciate a new BufferIOReader with an internal buffer of the specified existingBuffer:
+
+``` js
+var reader = new BufferIOReader(yourBuffer, { offset: 0, bigEndian: false});
+```
+
+#### Example with `reader.UInt8([offset])`
 
 ``` js
 var buf = Buffer.from([0xFF, 0x02]);
-var reader = new CleverBufferReader(buf);
-console.log(reader.getUInt8()); // 255
-console.log(reader.getUInt8()); // 2
+var reader = new BufferIOReader(buf);
+console.log(reader.UInt8()); // 255
+console.log(reader.UInt8()); // 2
 ```
 
-#### reader.getInt8([offset])
-* offset Number, Optional, Default: current buffer position
-
-Returns a Signed 8bit Integer from the current offset
-
-``` js
-var buf = Buffer.from([0xFF, 0x02]);
-var reader = new CleverBufferReader(buf);
-console.log(reader.getInt8()); // -1
-console.log(reader.getInt8()); // 2
-```
-
-#### reader.getUInt16([offset])
-* offset Number, Optional, Default: current buffer position
-
-Returns an Unsigned 16bit Integer from the current offset.
-
-``` js
-var buf = Buffer.from([0xFF, 0xFF, 0x02, 0x00]);
-var reader = new CleverBufferReader(buf);
-console.log(reader.getUInt16()); // 65535
-console.log(reader.getUInt16()); // 2
-```
-
-#### reader.getInt16([offset])
-* offset Number, Optional, Default: current buffer position
-
-Returns a Signed 16bit Integer from the current offset
-
-```js
-var buf = Buffer.from([0xFF, 0xFF, 0x02, 0x00]);
-var reader = new CleverBufferReader(buf);
-console.log(reader.getInt16()); // -1
-console.log(reader.getInt16()); // 2
-```
-
-#### reader.getUInt32([offset])
-* offset Number, Optional, Default: current buffer position
-
-Returns an Unsigned 32bit Integer from the current offset.
-
-``` js
-var buf = Buffer.from([0xFF, 0xFF, 0xFF, 0xFF]);
-var reader = new CleverBufferReader(buf);
-console.log(reader.getUInt32()); // 4294967295
-```
-
-#### reader.getInt32([offset])
-* offset Number, Optional, Default: current buffer position
-
-Returns a Signed 32bit Integer from the current offset
-
-``` js
-var buf = Buffer.from([0xFF, 0xFF, 0xFF, 0xFF]);
-var reader = new CleverBufferReader(buf);
-console.log(reader.getInt32()); // -1
-```
-
-#### reader.getBigUInt64([offset])
-* offset Number, Optional, Default: current buffer position
-
-Returns an Unsigned 64bit Integer from the current offset.
-
-The value will be returned as a string
-
-
-```js
-var buf = Buffer.from([0xFF, 0xFF, 0xFF, 0xFF,0xFF, 0xFF, 0xFF, 0xFF]);
-var reader = new CleverBufferReader(buf);
-console.log(reader.getBigUInt64()); // "18446744073709551615"
-```
-
-#### reader.getBigInt64([offset])
-* offset Number, Optional, Default: current buffer position
-
-Returns a Signed 64bit Integer from the current offset
-
-The value will be returned as a string
-
-
-```js
-var buf = Buffer.from([0xFF, 0xFF, 0xFF, 0xFF,0xFF, 0xFF, 0xFF, 0xFF]);
-var reader = new CleverBufferReader(buf);
-console.log(reader.getBigInt64()); // "-1"
-```
-
-#### reader.getString([options])
-* options Optional
-  * length Number, Optional, Default: 0
-  * offset Number, Optional, Default: current offset. If an offset is specified the current offset will not be incremented
-  * encoding String, Optional, Default: 'utf-8'
-
-Returns utf-8 encoded string of specified length
-
-`readString` is an alias of `getString`
-
-```js
-var buf = Buffer.from([0x48, 0x45, 0x4C, 0x4C, 0x4F]);
-var reader = new CleverBufferReader(buf);
-console.log(reader.getString({length: 5})); // "HELLO"
-```
 
 ## Writer Usage
 
 #### Requiring the writer in your project
+
 ```js
-const { CleverBufferWriter } = require('@imed.ch/clever-buffer');
+const { BufferIOWriter } = require('@imed.ch/buffer-io');
 ```
 
-#### new CleverBufferWriter existingBuffer, [options]
-* existingBuffer Buffer
-* options
-  * offset Number, Optional, Default: 0
-  * bigEndian Boolean, Optional, Default: false
+#### new BufferIOWriter existingBuffer, [options]
 
-Allocates a new CleverBufferWriter with an internal buffer of the specified existingBuffer
+Allocates a new BufferIOWriter with an internal buffer of the specified existingBuffer
 ```js
-var writer = new CleverBufferWriter(existingBuffer, {offset: 0, bigEndian: false});
+var writer = new BufferIOWriter(existingBuffer, {offset: 0, bigEndian: false});
 ```
+
 
 #### Any writer returns itself and therefore is chainable
 
@@ -183,109 +201,24 @@ is equivalent to :
 writer.writeUInt8(255).writeUInt8(2);
 ```
 
-#### writer.writeUInt8(value, [offset])
-* value Number
-* offset Number, Optional, Default: current buffer position
-
-Writes an Unsigned 8bit Integer to the specified/current offset
+#### Example with `writer.writeUInt8(value, [offset])`
 
 ```js
 var buf = Buffer.alloc(2);
-var writer = new CleverBufferWriter(buf);
+var writer = new BufferIOWriter(buf);
 writer.writeUInt8(255);
 writer.writeUInt8(2);
 console.log(buf); // [0xFF, 0x02]
 ```
 
-#### writer.writeInt8(value, [offset])
-* value Number
-* offset Number, Optional, Default: current buffer position
-
-Writes an signed 8bit Integer to the specified/current offset
-
-```js
-var buf = Buffer.alloc(2);
-var writer = new CleverBufferWriter(buf);
-writer.writeInt8(-1);
-writer.writeInt8(2);
-console.log(buf); // [0xFF, 0x02]
-```
-
-#### writer.writeUInt16(value, [offset])
-* value Number
-* offset Number, Optional, Default: current buffer position
-
-Writes an Unsigned 16bit Integer to the specified/current offset
-
-```js
-var buf = Buffer.alloc(4);
-var writer = new CleverBufferWriter(buf);
-writer.writeUInt16(65535);
-writer.writeUInt16(2);
-console.log(buf); // [0xFF, 0xFF, 0x02, 0x00]
-```
-
-#### writer.writeInt16(value, [offset])
-* value Number
-* offset Number, Optional, Default: current buffer position
-
-Writes an Signed 16bit Integer to the specified/current offset
-
-```js
-buf = Buffer.alloc(4);
-writer = new CleverBufferWriter(buf);
-writer.writeInt16(-1);
-writer.writeInt16(2);
-console.log(buf); // [0xFF, 0xFF, 0x02, 0x00]
-```
-#### writer.writeUInt32(value, [offset])
-* value Number
-* offset Number, Optional, Default: current buffer position
-
-Writes an Unsigned 32bit Integer to the specified/current offset
-
-```js
-var buf = Buffer.alloc(4);
-var writer = new CleverBufferWriter(buf);
-writer.writeUInt32(4294967295);
-console.log(buf); // [0xFF, 0xFF, 0xFF, 0xFF]
-```
-
-#### writer.writeInt32(value, [offset])
-* value Number
-* offset Number, Optional, Default: current buffer position
-
-Writes an signed 32bit Integer to the specified/current offset
-
-```js
-var buf = Buffer.alloc(4);
-var writer = new CleverBufferWriter(buf);
-writer.writeInt32(-1);
-console.log(buf); // [0xFF, 0xFF, 0xFF, 0xFF]
-```
-#### writer.writeString(value, [options])
-* value String
-* options Optional
-  * length Number, Optional, number of bytes to write. Note this can be greater than `value.length` for non ASCII encodings. If not specified, will default to the right number of bytes for the chosen encoding.
-  * offset Number, Optional, Default: current offset. If an offset is specified the current offset will not be incremented
-  * encoding String, Optional, Default: 'utf-8'
-* returns the number of bytes written
-
-Writes string to the buffer
-
-```js
-var buf =  Buffer.alloc(8);
-var writer = new CleverBufferWriter(buf);
-var len = writer.writeString("héllo");
-console.log(len, buf); // 6, [0x68, 0xc3, 0xa9, 0x6c, 0x6c, 0x6f, 0x00, 0x00]
-```
 
 ## Error Handling
 
-Note that this module does not run any assertion and you have to deal with yourself&nbsp;:
+Note that this module does not run any assertion and you have to deal with errors&nbsp;:
+
 ```js
 try {
-    let str = reader.getString({length: 5});
+    let str = reader.String({length: 5});
     writer.setUInt32(/* value */ 87234, /* offset */ 15)
         .setDouble(34,553);
 } catch(e) {
@@ -300,113 +233,43 @@ try {
 
 }
 ```
-## Common Functionality
-The following is common to CleverBufferReader and CleverBufferWriter (The examples only show reader)
 
-#### reader.offset
-Gets the current offset of the buffer
-```js
-var buf = Buffer.from([0xFF, 0x02]);
-var reader = new CleverBufferReader(buf);
-console.log(reader.offset); // 0
-reader.getUInt8();
-console.log(reader.offset); // 1
-reader.getUInt8();
-console.log(reader.offset); // 2  
-```
-
-Sets the current offset of the buffer  
-<small>In most case you will set `offset` in the `options` parameter of read/write functions. But it is possible to set it manually with&nbsp;:</small>
-```js
-reader.offset = 3;
-writer.offset = 4;
-```
-For a reader `offset` should be in range of `0..reader.length`.
-
-#### reader.eob()
-This function returns `true` if offset is set passed the end of buffer.
-
-#### reader.skip(bytes)
-* bytes Number
-
-Skips the current offset forward the specified bytes amount
-
-```js
-var buf = Buffer.from([0xFF, 0x02]);
-var reader = new CleverBufferReader(buf);
-console.log(reader.offset); // 0
-reader.skip(2);
-console.log(reader.offset); // 2  
-```
-
-#### reader.skipTo(offset)
-* offset Number
-
-Skips to the specified offset
-
-```js
-var buf = Buffer.from([0xFF, 0xFF, 0xFF, 0x01]);
-var reader = new CleverBufferReader(buf);
-console.log(reader.offset); // 0
-reader.skipTo(3);
-console.log(reader.offset); // 3  
-```
-
-#### reader.getBuffer()
-Will return the underlying buffer so you can perform actions directly on it
-
-```js
-var buf = Buffer.from([0xFF, 0x02]);
-var reader = new CleverBufferReader(buf);
-console.log(reader.getBuffer()[1]); // 2
-```
-
-#### reader.trim()
-Will return a buffer slice from the start of the buffer to the current offset
-
-```js
-var buf = Buffer.from([0xFF, 0x02]);
-var reader = new CleverBufferReader(buf);
-reader.getUInt8();
-console.log(reader.trim()); // [0xFF]
-console.log(buf);           // [0xFF, 0x02]
-```
-
-## API signatures
+## API Signatures Summary
 
 ### Reader/Writer API ###
 
-	value = reader[type](offset);
-	value = reader[type]();
-	reader.AsString({
-		length, // number of bytes to write (byte length ≠ char length depending on encoding)
-		offset, // Number of bytes to skip before starting to write string.
-		encoding, // The character encoding of string, default 'utf8'
-	});
-	
-	writer[type](value, offset);
-	writer[type](value);
-	writer.AsString(value, {
-		length, // number of bytes to write (byte length ≠ char length depending on encoding)
-		offset, // Number of bytes to skip before starting to write string.
-		encoding, // The character encoding of string, default 'utf8'
-	});
+```js
+value = reader[type](offset);
+value = reader[type]();
+reader.AsString({
+  length, // number of bytes to write (byte length ≠ char length depending on encoding)
+  offset, // Number of bytes to skip before starting to write string.
+  encoding, // The character encoding of string, default 'utf8'
+});
 
-where type is one of&nbsp;:
+writer[type](value, offset);
+writer[type](value);
+writer.AsString(value, {
+  length, // number of bytes to write (byte length ≠ char length depending on encoding)
+  offset, // Number of bytes to skip before starting to write string.
+  encoding, // The character encoding of string, default 'utf8'
+});
+```
 
-	AsString Bytes
-	UTF8 // alias to  AsString() but enforce UTF-8 encoding.
-	BigInt64 BigInt64BE BigInt64LE BigUInt64 BigUInt64BE BigUInt64LE Bytes Double DoubleBE DoubleLE Float Float32 Float32BE Float32LE FloatBE FloatLE Int Int16 Int16BE Int16LE Int32 Int32BE Int32LE Int8 IntBE IntLE SFloat SFloatBE SFloatLE UInt UInt16 UInt16BE UInt16LE UInt32 UInt32BE UInt32LE UInt8 UIntBE UIntLE
-
-in lower case is also equivalent :
-	asstring bytes utf8
-	bigint64 bigint64be bigint64le biguint64 biguint64be biguint64le bytes double doublebe doublele float float32 float32be float32le floatbe floatle int int16 int16be int16le int32 int32be int32le int8 intbe intle sfloat sfloatbe sfloatle uint uint16 uint16be uint16le uint32 uint32be uint32le uint8 uintbe uintle
-
-
+where type is describes in the [Functions list](#Functions_List) §.
 
 ## Testing
-
 
 ```
 npm test
 ```
+
+## Support or just a greeting !
+
+Enyjoy, fill an issue when appropriate! If you'd like you can support the freelancer I am via&nbsp;:
+
+[![click me](https://ko-fi.com/img/Kofi_Logo_Blue.svg)](https://ko-fi.com/elojes)
+
+## ABOUT ME ##
+
+Please, feel free to visit our personal website [imed.ch](http://imed.ch) and have a look to IoT projects for HealthCare we are involved in with [eliiot technology](http://eliiot-technology.ch).

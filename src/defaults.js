@@ -1,5 +1,5 @@
 /**
- *
+ * @private
  * @param {object} obj the object to set default
  * @param {object} defaultValues default values
  * @returns {object} a new object with
@@ -50,6 +50,9 @@ const defaults = (obj, defaultValues) => {
     // return newObj;
 };
 
+/**
+ * @private
+ */
 module.exports = defaults;
 
 
