@@ -140,7 +140,14 @@ if (!reader.isRangeError(size, offset)) data = reader.bytes({ length, offset });
 
 This is the list of all functions to read and write data&nbsp;:
 
-`asstring`, ` AsString`, ` bigint64`, ` BigInt64`, ` bigint64be`, ` BigInt64BE`, ` bigint64le`, ` BigInt64LE`, ` biguint64`, ` BigUInt64`, ` biguint64be`, ` BigUInt64BE`, ` biguint64le`, ` BigUInt64LE`, ` bytes`, ` Bytes`, ` double`, ` Double`, ` doublebe`, ` DoubleBE`, ` doublele`, ` DoubleLE`, ` float`, ` Float`, ` float24_32`, ` Float24_32`, ` float24_32be`, ` Float24_32BE`, ` float24_32le`, ` Float24_32LE`, ` floatbe`, ` FloatBE`, ` floatle`, ` FloatLE`, ` int`, ` Int`, ` int16`, ` Int16`, ` int16be`, ` Int16BE`, ` int16le`, ` Int16LE`, ` int32`, ` Int32`, ` int32be`, ` Int32BE`, ` int32le`, ` Int32LE`, ` int64`, ` Int64`, ` int64be`, ` Int64BE`, ` int64le`, ` Int64LE`, ` int8`, ` Int8`, ` intbe`, ` IntBE`, ` intle`, ` IntLE`, ` sfloat12_16`, ` SFloat12_16`, ` sfloat12_16be`, ` SFloat12_16BE`, ` sfloat12_16le`, ` SFloat12_16LE`, ` uint`, ` UInt`, ` uint16`, ` UInt16`, ` uint16be`, ` UInt16BE`, ` uint16le`, ` UInt16LE`, ` uint32`, ` UInt32`, ` uint32be`, ` UInt32BE`, ` uint32le`, ` UInt32LE`, ` uint64`, ` UInt64`, ` uint64be`, ` UInt64BE`, ` uint64le`, ` UInt64LE`, ` uint8`, ` UInt8`, ` uintbe`, ` UIntBE`, ` uintle`, ` UIntLE`, ` utf8`, ` UTF8`
+`asstring`, `AsString`, `bigint64`, `BigInt64`, `bigint64be`, `BigInt64BE`, `bigint64le`, `BigInt64LE`, `biguint64`, `BigUInt64`, `biguint64be`, `BigUInt64BE`, `biguint64le`, `BigUInt64LE`, `bytes`, `Bytes`, `double`, `Double`, `doublebe`, `DoubleBE`, `doublele`, `DoubleLE`, `float`, `Float`, `float24_32`, `Float24_32`, `float24_32be`, `Float24_32BE`, `float24_32le`, `Float24_32LE`, `floatbe`, `FloatBE`, `floatle`, `FloatLE`, `ieee754`, `ieee754BE`, `ieee754be`, `ieee754LE`, `ieee754le`, `int`, `Int`, `int16`, `Int16`, `int16be`, `Int16BE`, `int16le`, `Int16LE`, `int32`, `Int32`, `int32be`, `Int32BE`, `int32le`, `Int32LE`, `int64`, `Int64`, `int64be`, `Int64BE`, `int64le`, `Int64LE`, `int8`, `Int8`, `intbe`, `IntBE`, `intle`, `IntLE`, `sfloat12_16`, `SFloat12_16`, `sfloat12_16be`, `SFloat12_16BE`, `sfloat12_16le`, `SFloat12_16LE`, `uint`, `UInt`, `uint16`, `UInt16`, `uint16be`, `UInt16BE`, `uint16le`, `UInt16LE`, `uint32`, `UInt32`, `uint32be`, `UInt32BE`, `uint32le`, `UInt32LE`, `uint64`, `UInt64`, `uint64be`, `UInt64BE`, `uint64le`, `UInt64LE`, `uint8`, `UInt8`, `uintbe`, `UIntBE`, `uintle`, `UIntLE`, `utf8`, `UTF8`,
+
+- Usage of [ieee754, ieee754LE and ieee754BE](https://github.com/feross/ieee754) :
+
+```js
+val = reader.ieee754({offset, isLE, mLen, nBytes});
+writer.ieee754(val, {offset, isLE, mLen, nBytes});
+```
 
 This list can be query with:
 
@@ -271,6 +278,25 @@ where type is describes in the [Functions list](#Functions_List) §.
 
 ```
 npm test
+```
+
+## TODO
+
+- reader and writer functions optimisation:
+
+```js
+// instead of 
+BigUInt64BE(offset) {
+	return this._executeReadAndIncrement(8, Buffer.prototype.readBigUInt64BE, offset);
+}
+
+// write:
+const readBigUInt64BE = Buffer.prototype.readBigUInt64BE; // outside class
+
+BigUInt64BE(offset) { // in class
+	return this._executeReadAndIncrement(8, readBigUInt64BE, offset);
+}
+
 ```
 
 ## Enjoying ##

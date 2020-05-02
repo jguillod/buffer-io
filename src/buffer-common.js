@@ -8,12 +8,12 @@ class BufferIO {
 	 * @abstract
 	 * @hideconstructor
 	 * @param {Buffer} buffer
-	 * @param {object} [options]
-	 * @param {number} [options.offset=0] offset at instanciation
-	 * @param {boolean} [options.bigEndian=false] use Big or Low Endian (LE by default)
+	 * @param {object} [config]
+	 * @param {number} [config.offset=0] offset at instanciation
+	 * @param {boolean} [config.bigEndian=false] use Big or Low Endian (LE by default)
 	 * @returns {BufferIO}
 	 */
-	constructor(buffer, options = {}) {
+	constructor(buffer, config = {}) {
 
 		// this._executeAndIncrement = this._executeAndIncrement.bind(this);
 		// this.getBuffer = this.getBuffer.bind(this);
@@ -27,7 +27,7 @@ class BufferIO {
 		({
 			offset: this._offset,
 			bigEndian: this.bigEndian
-		} = defaults(options, {
+		} = defaults(config, {
 			offset: 0,
 			bigEndian: false
 		}));

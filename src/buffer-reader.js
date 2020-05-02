@@ -10,13 +10,13 @@ class BufferIOReader extends BufferIO {
 	/**
 	 * @extends BufferIO
 	 * @param {Buffer} buffer
-	 * @param {object} [options]
-	 * @param {number} [options.offset=0] offset at instanciation
-	 * @param {boolean} [options.bigEndian=false] use Big or Low Endian (default)
+	 * @param {object} [config]
+	 * @param {number} [config.offset=0] offset at instanciation
+	 * @param {boolean} [config.bigEndian=false] use Big or Low Endian (default)
 	 * @returns {BufferIOReader}
 	 */
-	constructor(buffer, options = {}) {
-		super(buffer, options);
+	constructor(buffer, config = {}) {
+		super(buffer, config);
 	}
 
 	/**
@@ -84,6 +84,39 @@ class BufferIOReader extends BufferIO {
 			this.offset += length;
 		}
 		return val;
+	}
+
+
+	/**
+	 * 
+	 * @param {Float} value Number to read from buffer
+	 * @param {object} options {offset, isLE, mLen, nBytes} see [ieee754 module](https://github.com/feross/ieee754).
+	 * The 4 params can also be separate argument in this order: offset, isLE, mLen, nBytes
+	 */
+	ieee754(offset, isLE, mLen, nBytes) {
+		return (this.bigEndian ? this.ieee754BE : this.ieee754LE).call(this, offset, isLE, mLen, nBytes);
+	}
+	ieee754BE(offset, isLE, mLen, nBytes) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				isLE,
+				mLen,
+				nBytes
+			} = offset);
+		}
+		return this._executeReadAndIncrement(nBytes, ieee754Read, offset, isLE, mLen, nBytes); // offset, isLE, mLen, nBytes
+	}
+	ieee754LE(offset, isLE, mLen, nBytes) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				isLE,
+				mLen,
+				nBytes
+			} = offset);
+		}
+		return this._executeReadAndIncrement(nBytes, ieee754Read, offset, isLE, mLen, nBytes);
 	}
 
 	Float24_32(offset) {

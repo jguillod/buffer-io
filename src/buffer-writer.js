@@ -10,14 +10,19 @@ class BufferIOWriter extends BufferIO {
 
 	/**
 	 * @extends BufferIO
-	 * @param {Buffer} buffer
-	 * @param {object} [options]
-	 * @param {number} [options.offset=0] offset at instanciation
-	 * @param {boolean} [options.bigEndian=false] use Big or Low Endian (default)
+	 * @param {Buffer} [buffer]
+	 * @param {object} [config]
+	 * @param {integer} [config.size=20] The desired initial length of the new Buffer.
+	 * @param {integer} [config.offset=0] offset at instanciation
+	 * @param {boolean} [config.bigEndian=false] use Big or Low Endian (default)
 	 * @returns {BufferIOWriter}
 	 */
-	constructor(buffer, options = {}) {
-		super(buffer, options);
+	constructor(buffer, config = {}) {
+		if (!Buffer.isBuffer(buffer)) {
+			config = buffer || {};
+			buffer = Buffer.alloc(config.size || 20);
+		}
+		super(buffer, config);
 	}
 
 	/**
@@ -89,6 +94,41 @@ class BufferIOWriter extends BufferIO {
 		return this;
 	}
 
+
+	/**
+	 * 
+	 * @param {Float} value Number to be written to buffer
+	 * @param {object} offset see [ieee754 module](https://github.com/feross/ieee754).
+	 * @param {object} isLE see [ieee754 module](https://github.com/feross/ieee754).
+	 * @param {object} mLen see [ieee754 module](https://github.com/feross/ieee754).
+	 * @param {object} nBytes see [ieee754 module](https://github.com/feross/ieee754).
+	 * The 4 params can also be put in an object {offset, isLE, mLen, nBytes} as the 2nd param.
+	 */
+	ieee754(value, offset, isLE, mLen, nBytes) {
+		return (this.bigEndian ? this.ieee754BE : this.ieee754LE).call(this, value, offset, isLE, mLen, nBytes);
+	}
+	ieee754BE(value, offset, isLE, mLen, nBytes) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				isLE,
+				mLen,
+				nBytes
+			} = offset);
+		}
+		return this._executeWriteAndIncrement(nBytes, ieee754Write, value, offset, isLE, mLen, nBytes); // offset, isLE, mLen, nBytes
+	}
+	ieee754LE(value, offset, isLE, mLen, nBytes) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				isLE,
+				mLen,
+				nBytes
+			} = offset);
+		}
+		return this._executeWriteAndIncrement(nBytes, ieee754Write, value, offset, isLE, mLen, nBytes);
+	}
 
 	/**
 	 * @param {Float} value Number to be written to buffer
