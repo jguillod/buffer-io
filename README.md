@@ -147,6 +147,9 @@ This is the list of all functions to read and write data&nbsp;:
 ```js
 val = reader.ieee754({offset, isLE, mLen, nBytes});
 writer.ieee754(val, {offset, isLE, mLen, nBytes});
+// or
+val = reader.ieee754(offset, isLE, mLen, nBytes);
+writer.ieee754(val, offset, isLE, mLen, nBytes);
 ```
 
 This list can be query with:
