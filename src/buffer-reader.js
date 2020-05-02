@@ -21,7 +21,7 @@ class BufferIOReader extends BufferIO {
 
 	/**
 	 * Read a string
-	 * @param {object} [options]
+	 * @param {object} [options|offset] params can be set as an object or in arguments in this order: offset, length, encoding.
 	 * @param {object} [options.length=0] number of bytes to read (byte length ≠ char length depending on encoding).
 	 * When not specified, will read to the end of buffer.
 	 * @param {object} [options.offset] Number of bytes to skip before starting to read string.
@@ -29,17 +29,33 @@ class BufferIOReader extends BufferIO {
 	 * @param {object} [options.encoding=utf8] The character encoding of string
 	 * @returns {String} - the decoded string, `''` if length was `0`.
 	 */
-	AsString(options = {}) {
-		const offsetSpecified = (options.offset != null);
-		const {
-			length,
-			offset,
-			encoding
-		} = defaults(options, {
-			length: 0,
-			offset: this.offset,
-			encoding: 'utf8'
-		});
+	AsString(offset /* or options */ , length, encoding) {
+		// return this.Bytes(Buffer.from(value, options.encoding || 'utf8'), options);
+		if (typeof offset === 'object') {
+			({
+				offset,
+				length,
+				encoding
+			} = offset || {});
+		}
+		const offsetSpecified = (offset != null);
+		offset = offset || this.offset;
+		length = length || 0;
+		encoding = encoding || 'utf8';
+
+		// ({
+		// 	offset,
+		// 	length,
+		// 	encoding
+		// } = defaults({
+		// 	offset,
+		// 	length,
+		// 	encoding
+		// }, {
+		// 	offset: this.offset,
+		// 	length: null,
+		// 	encoding: 'utf8'
+		// }));
 		if (length === 0) {
 			return '';
 		}
@@ -54,9 +70,15 @@ class BufferIOReader extends BufferIO {
 	 * 
 	 * Same as {@link BufferIOReader#AsString} but enforce `option.encoding = utf8`.
 	 */
-	UTF8(option = {}) {
-		option.encoding = `utf8`;
-		return this.AsString(option);
+	UTF8(offset /* or options */ , length, encoding) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				length
+			} = offset || {});
+		}
+		encoding = `utf8`;
+		return this.AsString(offset, length, encoding);
 	}
 
 	/**
@@ -67,15 +89,23 @@ class BufferIOReader extends BufferIO {
 	 * @param {object} [options.offset] Index in buffer where to start reading. Default is current offset.
 	 * @return {BufferIOWriter} This buffer writer.
 	 */
-	Bytes(options = {}) {
-		const offsetSpecified = (options.offset != null);
-		const {
-			length,
-			offset
-		} = defaults(options, {
-			length: 0,
-			offset: this.offset
-		});
+	Bytes(offset /* or options */ , length) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				length
+			} = offset || {});
+		}
+		const offsetSpecified = (offset != null);
+		offset = offset || this.offset;
+		length = length || 0;
+		// ({
+		// 	length,
+		// 	offset
+		// } = defaults(options, {
+		// 	length: 0,
+		// 	offset: this.offset
+		// }));
 		if (length === 0) {
 			return [];
 		}

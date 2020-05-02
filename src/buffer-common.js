@@ -33,42 +33,44 @@ class BufferIO {
 		}));
 	}
 
-	/*
-	 * @private
-	 * @example
-	 * console.log(require('./src/buffer-common')._doc_generator());
-	 */
-	static _doc_generator() {
-		const exclusion = ['asstring', 'utf8', 'bytes', 'int', 'intle', 'intbe', 'uint', 'uintle', 'uintbe'];
-		const types = this.types()
-		.filter(f => (!exclusion.includes(f) && !exclusion.includes(f.toLowerCase()) 
-		&& (f != f.toLowerCase())))
-		.sort().sort((a, b) => {
-			return ((a = a.toLowerCase()) > (b = b.toLowerCase())) ? 1 : (a == b ? 0 : -1);
-		});
-		return '// ˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉ' +
-			'\n// BufferIOWriter\n' +
-			types.map(f => {
-				return `/**
-* @name BufferIOWriter#${f}
-* @function 
-* @param {number} value - Value to write.
-* @param {integer} offset Number of bytes to skip before starting to read. Must satisfy 0 <= offset <= buf.length - byteLength.
-* @return {BufferIOWriter} This buffer writer.
-*/`;
-			}).join('\n\n') +
-			'\n// ˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉ' +
-			'\n// BufferIOReader\n' +
-			types.map(f => {
-				return `/**
-* @name BufferIOReader#${f}
-* @function 
-* @param {integer} offset Number of bytes to skip before starting to read. Must satisfy 0 <= offset <= buf.length - byteLength.
-* @return {number} - Value read.
-*/`;
-			}).join('\n\n') +
-			'\n// ˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉ';
-	}
+	// 	/*
+	// 	 * @deprecated
+	// 	 * @private
+	// 	 * @example
+	// 	 * console.log(require('./src/buffer-common')._doc_generator());
+	// 	 */
+	// 	static _doc_generator() {
+	// 		const exclusion = ['asstring', 'utf8', 'bytes', 'int', 'intle', 'intbe', 'uint', 'uintle', 'uintbe'];
+	// 		const types = this.types()
+	// 		.filter(f => (!exclusion.includes(f) && !exclusion.includes(f.toLowerCase()) 
+	// 		&& (f != f.toLowerCase())))
+	// 		.sort().sort((a, b) => {
+	// 			return ((a = a.toLowerCase()) > (b = b.toLowerCase())) ? 1 : (a == b ? 0 : -1);
+	// 		});
+	// 		return '// ˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉ' +
+	// 			'\n// BufferIOWriter\n' +
+	// 			types.map(f => {
+	// 				return `/**
+	// * @name BufferIOWriter#${f}
+	// * @function 
+	// * @param {number} value - Value to write.
+	// * @param {integer} offset Number of bytes to skip before starting to read. Must satisfy 0 <= offset <= buf.length - byteLength.
+	// * @return {BufferIOWriter} This buffer writer.
+	// */`;
+	// 			}).join('\n\n') +
+	// 			'\n// ˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉ' +
+	// 			'\n// BufferIOReader\n' +
+	// 			types.map(f => {
+	// 				return `/**
+	// * @name BufferIOReader#${f}
+	// * @function 
+	// * @param {integer} offset Number of bytes to skip before starting to read. Must satisfy 0 <= offset <= buf.length - byteLength.
+	// * @return {number} - Value read.
+	// */`;
+	// 			}).join('\n\n') +
+	// 			'\n// ˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉˉ';
+	// 	}
+
 	/**
 	 * @returns {Array.string} A list of types which are functions to read/write from/to buffer.
 	 * Selection is made by taking functions of both classes with same name.
@@ -107,6 +109,7 @@ class BufferIO {
 
 		let val = readFn.call(this.buffer, offset, ...rest);
 		if (_offset == null) {
+			// update current offset only if offset was not specified in param
 			this._offset += size;
 		}
 		return val;
@@ -132,6 +135,7 @@ class BufferIO {
 		const ofst = writeFn.call(this.buffer, value, offset, ...rest);
 		// console.log('[_executeWriteAndIncrement]', _offset, ofst, this);
 		if (_offset == null) {
+			// update current offset only if offset was not specified in param
 			this._offset = ofst;
 		}
 		return this; // i.e. chainable

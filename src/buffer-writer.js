@@ -29,24 +29,38 @@ class BufferIOWriter extends BufferIO {
 	 *
 	 * @param {string} value String to be written to buffer
 	 * @param {object} [options]
-	 * @param {object} [options.length] number of bytes to write (byte length ≠ char length depending on encoding)
-	 * @param {object} [options.offset] Number of bytes to skip before starting to write string.
+	 * @param {object} [options.length=null] number of bytes to write (byte length ≠ char length depending on encoding)
+	 * @param {object} [options.offset='utf8'] Number of bytes to skip before starting to write string.
 	 *  Default to current reader offset.
 	 * @param {object} [options.encoding=utf8] The character encoding of string
 	 * @return {BufferIOWriter}
 	 */
-	AsString(value, options = {}) {
+	AsString(value, offset /* or options */ , length, encoding) {
 		// return this.Bytes(Buffer.from(value, options.encoding || 'utf8'), options);
-		const offsetSpecified = (options.offset != null);
-		let {
-			length,
-			offset,
-			encoding
-		} = defaults(options, {
-			length: null,
-			offset: this.offset,
-			encoding: 'utf8'
-		});
+		if (typeof offset === 'object') {
+			({
+				offset,
+				length,
+				encoding
+			} = offset || {});
+		}
+		const offsetSpecified = (offset != null);
+		offset = offset || this.offset;
+		length = length || 0;
+		encoding = encoding || 'utf8';
+		// ({
+		// 	offset,
+		// 	length,
+		// 	encoding
+		// } = defaults({
+		// 	offset,
+		// 	length,
+		// 	encoding
+		// }, {
+		// 	offset: this.offset,
+		// 	length: 0,
+		// 	encoding: 'utf8'
+		// }));
 		let maxlen = Buffer.from(value, encoding).length;
 		length = Math.min(length || maxlen, maxlen);
 		this._checkAllocBuffer(offset, length);
@@ -60,9 +74,15 @@ class BufferIOWriter extends BufferIO {
 	 * 
 	 * @param {object} option see {@link BufferIOWriter#AsString} but enforce `option.encoding = utf8`
 	 */
-	UTF8(value, option = {}) {
-		option.encoding = `utf8`;
-		return this.AsString(value, option);
+	UTF8(value, offset /* or options */ , length) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				length
+			} = offset || {});
+		}
+		encoding = `utf8`;
+		return this.AsString(value, offset, length, encoding);
 	}
 
 	/**
@@ -75,15 +95,26 @@ class BufferIOWriter extends BufferIO {
 	 * @param {object} [options.offset] Index in buffer where to start writing. Default is current offset
 	 * @return {BufferIOWriter} This buffer writer.
 	 */
-	Bytes(value, options = {}) {
-		const offsetSpecified = (options.offset != null);
-		let {
-			length,
-			offset
-		} = defaults(options, {
-			length: null,
-			offset: this.offset
-		});
+	Bytes(value, offset /* or options */ , length) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				length
+			} = offset || {});
+		}
+		const offsetSpecified = (offset != null);
+		offset = offset || this.offset;
+		length = length || 0;
+		// ({
+		// 	offset,
+		// 	length
+		// } = defaults({
+		// 	offset,
+		// 	length
+		// }, {
+		// 	offset: this.offset,
+		// 	length: null
+		// }));
 		if (!(value instanceof Buffer)) value = Buffer.from(value);
 		length = Math.min(value.length, length || value.length);
 		this._checkAllocBuffer(offset, value.length);

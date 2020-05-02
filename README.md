@@ -136,21 +136,11 @@ console.log(buf);           // [0xFF, 0x02]
 if (!reader.isRangeError(size, offset)) data = reader.bytes({ length, offset });
 ```
 
-#### Functions List ####
+#### Functions List (types) ####
 
 This is the list of all functions to read and write data&nbsp;:
 
 `asstring`, `AsString`, `bigint64`, `BigInt64`, `bigint64be`, `BigInt64BE`, `bigint64le`, `BigInt64LE`, `biguint64`, `BigUInt64`, `biguint64be`, `BigUInt64BE`, `biguint64le`, `BigUInt64LE`, `bytes`, `Bytes`, `double`, `Double`, `doublebe`, `DoubleBE`, `doublele`, `DoubleLE`, `float`, `Float`, `float24_32`, `Float24_32`, `float24_32be`, `Float24_32BE`, `float24_32le`, `Float24_32LE`, `floatbe`, `FloatBE`, `floatle`, `FloatLE`, `ieee754`, `ieee754BE`, `ieee754be`, `ieee754LE`, `ieee754le`, `int`, `Int`, `int16`, `Int16`, `int16be`, `Int16BE`, `int16le`, `Int16LE`, `int32`, `Int32`, `int32be`, `Int32BE`, `int32le`, `Int32LE`, `int64`, `Int64`, `int64be`, `Int64BE`, `int64le`, `Int64LE`, `int8`, `Int8`, `intbe`, `IntBE`, `intle`, `IntLE`, `sfloat12_16`, `SFloat12_16`, `sfloat12_16be`, `SFloat12_16BE`, `sfloat12_16le`, `SFloat12_16LE`, `uint`, `UInt`, `uint16`, `UInt16`, `uint16be`, `UInt16BE`, `uint16le`, `UInt16LE`, `uint32`, `UInt32`, `uint32be`, `UInt32BE`, `uint32le`, `UInt32LE`, `uint64`, `UInt64`, `uint64be`, `UInt64BE`, `uint64le`, `UInt64LE`, `uint8`, `UInt8`, `uintbe`, `UIntBE`, `uintle`, `UIntLE`, `utf8`, `UTF8`,
-
-- Usage of [ieee754, ieee754LE and ieee754BE](https://github.com/feross/ieee754) :
-
-```js
-val = reader.ieee754({offset, isLE, mLen, nBytes});
-writer.ieee754(val, {offset, isLE, mLen, nBytes});
-// or
-val = reader.ieee754(offset, isLE, mLen, nBytes);
-writer.ieee754(val, offset, isLE, mLen, nBytes);
-```
 
 This list can be query with:
 
@@ -167,7 +157,7 @@ let type = 'uint8';
 reader[type]();
 ```
 
->CAVEAT : Documentation below may not be complete but you find description of most function in the `Buffer.read<type>` and `Buffer.write<type>` in [NodeJS documentation](https://nodejs.org/api/buffer.html#buffer_buf_readbigint64be_offset).
+>CAVEAT : Documentation below may not be complete but you find description of most function in the `BufferIOReader[type]` and `BufferIOWriter[type]` in [NodeJS documentation](https://nodejs.org/api/buffer.html#buffer_buf_readbigint64be_offset).
 
 
 
@@ -210,23 +200,23 @@ var writer = new BufferIOWriter(existingBuffer, {offset: 0, bigEndian: false});
 #### Any writer returns itself and therefore is chainable
 
 ```js
-writer.writeUInt8(255);
-writer.writeUInt8(2);
+writer.UInt8(255);
+writer.UInt8(2);
 ```
 
 is equivalent to :
 
 ```js
-writer.writeUInt8(255).writeUInt8(2);
+writer.UInt8(255).UInt8(2);
 ```
 
-#### Example with `writer.writeUInt8(value, [offset])`
+#### Example with `writer.UInt8(value, [offset])`
 
 ```js
 var buf = Buffer.alloc(2);
 var writer = new BufferIOWriter(buf);
-writer.writeUInt8(255);
-writer.writeUInt8(2);
+writer.UInt8(255);
+writer.UInt8(2);
 console.log(buf); // [0xFF, 0x02]
 ```
 
@@ -238,8 +228,8 @@ Note that this module does not run any assertion and you have to deal with error
 ```js
 try {
     let str = reader.String({length: 5});
-    writer.setUInt32(/* value */ 87234, /* offset */ 15)
-        .setDouble(34,553);
+    writer.UInt32(/* value */ 87234, /* offset */ 15)
+        .Double(34,553);
 } catch(e) {
   if (e instanceof TypeError) {
     // statements to handle TypeError exceptions
@@ -255,27 +245,73 @@ try {
 
 ## API Signatures Summary
 
-### Reader/Writer API ###
+### Basic rule
+Writer 1<sup>st</sup> param is always the value to write. Then, both Writer and Reader take the same optional parameters in the same order:
+
+```js
+writer[type]( value [, offset] [, ...rest] );
+val = reader[type]( [, offset] [, ...rest] );
+```
+When there are extra params (`...rest` part) then functions accept to put all params in a unique object param:
+
+```js
+// e.g. type AsString, UTF8, Bytes, ieee754
+writer[type]( value [, { offset, ...rest }] );
+val = reader[type]( [, { offset , ...rest } );
+```
+
+#### Parameter `offset`
+
+Optional for all API (required for functions with extra-params).
+`offset` is the number of bytes to skip before starting to read/write the buffer. When missing the next operation take place at the current offset and the operation updates the offset for the reader/writer.
+> IMPORTANT : when you specify an offset argument the offset of reader/writer is **NOT updated** after the operation.
+
 
 ```js
 value = reader[type](offset);
 value = reader[type]();
-reader.AsString({
-  length, // number of bytes to write (byte length ≠ char length depending on encoding)
-  offset, // Number of bytes to skip before starting to write string.
-  encoding, // The character encoding of string, default 'utf8'
-});
+
 
 writer[type](value, offset);
 writer[type](value);
-writer.AsString(value, {
-  length, // number of bytes to write (byte length ≠ char length depending on encoding)
-  offset, // Number of bytes to skip before starting to write string.
-  encoding, // The character encoding of string, default 'utf8'
-});
 ```
 
 where type is describes in the [Functions list](#Functions_List) §.
+
+#### Some functions take extra parameters
+
+- `AsString({offset, length, encoding})`
+
+  ```js
+  reader.AsString({
+    length, // number of bytes to write (byte length ≠ char length depending on encoding)
+    offset, // Number of bytes to skip before starting to write string.
+    encoding, // The character encoding of string, default 'utf8'
+  });
+  writer.AsString(value, {
+    length, // number of bytes to write (byte length ≠ char length depending on encoding)
+    offset, // Number of bytes to skip before starting to write string.
+    encoding, // The character encoding of string, default 'utf8'
+  });
+  ```
+
+- `UTF8({offset, length})` or `UTF8(offset, length)` : same as AsString but encoding is enforced to `utf8`.
+
+- `Bytes({offset, length})` or `Bytes(offset, length)` 
+
+  - `length` : number of bytes to write (note: byte length ≠ char length depending on encoding);
+  - `offset` : index in buffer where to start writing. Default is current offset.
+
+- `ieee754(value, offset, isLE, mLen, nBytes)` or `ieee754({ value, offset, isLE, mLen, nBytes })` : (see usage on [ieee754, ieee754LE and ieee754BE](https://github.com/feross/ieee754))
+
+    ```js
+    val = reader.ieee754({offset, isLE, mLen, nBytes});
+    writer.ieee754(val, {offset, isLE, mLen, nBytes});
+    // or
+    val = reader.ieee754(offset, isLE, mLen, nBytes);
+    writer.ieee754(val, offset, isLE, mLen, nBytes);
+  ```
+
 
 ## Testing
 
@@ -288,13 +324,13 @@ npm test
 - reader and writer functions optimisation:
 
 ```js
-// instead of 
+// change that 
 BigUInt64BE(offset) {
-	return this._executeReadAndIncrement(8, Buffer.prototype.readBigUInt64BE, offset);
+	return this._executeReadAndIncrement(8, Buffer.prototype.BigUInt64BE, offset);
 }
 
-// write:
-const readBigUInt64BE = Buffer.prototype.readBigUInt64BE; // outside class
+// to this
+const readBigUInt64BE = Buffer.prototype.BigUInt64BE; // outside class
 
 BigUInt64BE(offset) { // in class
 	return this._executeReadAndIncrement(8, readBigUInt64BE, offset);
