@@ -81,7 +81,7 @@ class BufferIOWriter extends BufferIO {
 				length
 			} = offset || {});
 		}
-		encoding = `utf8`;
+		let encoding = `utf8`;
 		return this.AsString(value, offset, length, encoding);
 	}
 
