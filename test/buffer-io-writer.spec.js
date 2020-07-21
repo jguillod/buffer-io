@@ -1,9 +1,10 @@
-/* jshint "bigint": true */
+/* jshint bigint: true */
 
 const _ = require('lodash');
 const expect = require('chai').expect;
 const {
-    BufferIOWriter
+    BufferIOWriter,
+    BufferIOReader
 } = require('..');
 
 const {
@@ -13,6 +14,12 @@ const {
 const specHelper = require('./spec-helper');
 
 const FUNCTION_NAMES = ['AsString', 'Bytes', 'UTF8', 'BigInt64', 'BigInt64BE', 'BigInt64LE', 'BigUInt64', 'BigUInt64BE', 'BigUInt64LE', 'Bytes', 'Double', 'DoubleBE', 'DoubleLE', 'Float', 'Float32', 'Float32BE', 'Float32LE', 'FloatBE', 'FloatLE', 'Int', 'Int16', 'Int16BE', 'Int16LE', 'Int32', 'Int32BE', 'Int32LE', 'Int8', 'IntBE', 'IntLE', 'SFloat', 'SFloatBE', 'SFloatLE', 'UInt', 'UInt16', 'UInt16BE', 'UInt16LE', 'UInt32', 'UInt32BE', 'UInt32LE', 'UInt8', 'UIntBE', 'UIntLE'];
+
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min; //The maximum is exclusive and the minimum is inclusive
+}
 
 describe('BufferIOWriter', () => {
     const powed = v => Math.pow(2, v) - 1;
@@ -36,6 +43,85 @@ describe('BufferIOWriter', () => {
         });
     });
 
+    it('#datetime read and write dates', () => {
+        const w = new BufferIOWriter(),
+            expected = [2020, 5 - 1, 14, 12, 30, 56], // UTC 14.5.2020 12:30:56
+            arr = [228, 7, 5, 14, 12, 30, 56], // buffer sequence with LE
+            buf = Buffer.from(arr),
+            date = new Date(Date.UTC(...expected));
+        expect(date, date).to.be.instanceOf(Date);
+        w.datetime(date);
+        const r = new BufferIOReader(w.trim());
+        expect(r.datetime().getTime()).to.equal(date.getTime());
+        expect(w.offset).to.equal(7);
+        expect(w.trim().toJSON().data, date + buf.toJSON().data).to.deep.equal(arr);
+    });
+
+    it('#datetime read and write dates on Big Endianess and offset > 0', () => {
+        const w = new BufferIOWriter({
+            size: 10
+        }),
+            expected = [2020, 5 - 1, 14, 12, 30, 56], // 14.5.2020 12:30:56
+            date = new Date(...expected),
+            options = {
+                bigEndian: true,
+                offset: 3
+            };
+        expect(date, date).to.be.instanceOf(Date);
+        w.datetime(date, options);
+        const r = new BufferIOReader(w.getBuffer());
+        expect(r.datetime(options).getTime()).to.equal(date.getTime());
+        expect(w.offset).to.equal(0); // offset param => w.offset not update
+    });
+    it('#datetime read and write dates on offset skipped', () => {
+        const w = new BufferIOWriter({
+            size: 10
+        }),
+            expected = [2020, 5 - 1, 14, 12, 30, 56], // 14.5.2020 12:30:56
+            date = new Date(...expected),
+            options = {
+                bigEndian: true
+            };
+        expect(date, date).to.be.instanceOf(Date);
+        w.skip(3);
+        w.datetime(date, options);
+        const r = new BufferIOReader(w.getBuffer(), {
+            offset: 3
+        });
+        expect(r.datetime(options).getTime()).to.equal(date.getTime());
+        expect(w.offset).to.equal(10); // offset param => w.offset not update
+    });
+
+    it('should write Uint with 0 < byteLength <= 6', () => {
+        for (let byteLength = 1; byteLength <= 6; byteLength++) {
+            for (let j = 0; j < 20; j++) {
+                const value = getRandomInt(0, Math.pow(256, byteLength));
+                const buf = Buffer.alloc(byteLength);
+                buf.writeUIntLE(value, 0, byteLength);
+                const writer = new BufferIOWriter(Buffer.alloc(byteLength));
+                const bufferIO = writer.UIntLE(value, { byteLength }).getBuffer();
+
+                expect(buf).to.eql(bufferIO);
+            }
+        }
+    });
+
+    it('should write int with 0 < byteLength <= 6', () => {
+        for (let byteLength = 1; byteLength <= 6; byteLength++) {
+            for (let j = 0; j < 20; j++) {
+                const value = getRandomInt(-Math.pow(256, byteLength) / 2, Math.pow(256, byteLength) / 2);
+                const buf = Buffer.alloc(byteLength);
+                buf.writeIntLE(value, 0, byteLength);
+                const writer = new BufferIOWriter(Buffer.alloc(byteLength));
+                let bufferIO = writer.IntLE(value, { byteLength }).getBuffer();
+                expect(buf).to.eql(bufferIO);
+
+                buf.writeIntBE(value, 0, byteLength);
+                bufferIO = writer.IntBE(value, { offset: 0, byteLength }).getBuffer();
+                expect(buf).to.eql(bufferIO);
+            }
+        }
+    });
 
     it('should write Uint8', () => {
         const numberOfBytesPerWord = 1;

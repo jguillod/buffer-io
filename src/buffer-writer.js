@@ -28,11 +28,11 @@ class BufferIOWriter extends BufferIO {
 	/**
 	 *
 	 * @param {string} value String to be written to buffer
-	 * @param {object} [options]
+	 * @param {object} [options] offset or options as follows
 	 * @param {object} [options.length=null] number of bytes to write (byte length ≠ char length depending on encoding)
-	 * @param {object} [options.offset='utf8'] Number of bytes to skip before starting to write string.
-	 *  Default to current reader offset.
-	 * @param {object} [options.encoding=utf8] The character encoding of string
+	 * @param {object} [options.offset] Number of bytes to skip before starting to write string.
+	 *  Default to current reader offset. If specified then writer current offset will not be updated.
+	 * @param {object} [options.encoding='utf8'] The character encoding of string
 	 * @return {BufferIOWriter}
 	 */
 	AsString(value, offset /* or options */ , length, encoding) {
@@ -44,9 +44,10 @@ class BufferIOWriter extends BufferIO {
 				encoding
 			} = offset || {});
 		}
+		if(length === 0) return this; // do nothing !
 		const offsetSpecified = (offset != null);
 		offset = offset || this.offset;
-		length = length || 0;
+		length = length ?? Number.MAX_VALUE; // jshint ignore: line
 		encoding = encoding || 'utf8';
 		// ({
 		// 	offset,
@@ -72,7 +73,7 @@ class BufferIOWriter extends BufferIO {
 	}
 	/**
 	 * 
-	 * @param {object} option see {@link BufferIOWriter#AsString} but enforce `option.encoding = utf8`
+	 * @param {object} options see {@link BufferIOWriter#AsString} but enforce `options.encoding = utf8`
 	 */
 	UTF8(value, offset /* or options */ , length) {
 		if (typeof offset === 'object') {
@@ -81,7 +82,7 @@ class BufferIOWriter extends BufferIO {
 				length
 			} = offset || {});
 		}
-		let encoding = `utf8`;
+		let encoding = 'utf8';
 		return this.AsString(value, offset, length, encoding);
 	}
 
@@ -93,6 +94,7 @@ class BufferIOWriter extends BufferIO {
 	 * [`Buffer.from`](https://nodejs.org/api/buffer.html#buffer_class_method_buffer_from_array).
 	 * @param {object} [options.length] number of bytes to write (byte length ≠ char length depending on encoding)
 	 * @param {object} [options.offset] Index in buffer where to start writing. Default is current offset
+	 * If specified then writer current offset will not be updated.
 	 * @return {BufferIOWriter} This buffer writer.
 	 */
 	Bytes(value, offset /* or options */ , length) {
@@ -125,6 +127,50 @@ class BufferIOWriter extends BufferIO {
 		return this;
 	}
 
+	/**
+	 * datetime according to characterisric "org.bluetooth.characteristic.date_time"
+	 * @param {Date} date Either a Date to write, or an object {year, monthIndex, day, hours, minutes, seconds}.
+	 * @param {integer|Object} options offset value or options object as follows:
+	 * @param {integer} [options.offset] Number of bytes to skip before starting to write string.
+	 * If specified then writer current offset will not be updated.
+	 * @param {boolean} [options.bigEndian=false] Number of bytes to skip before starting to write string.
+	 * @param {boolean} [bigEndian=false] ignored if options is an Object.
+	 */
+	datetime(date, offset, bigEndian = false) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				bigEndian = false
+			} = offset || {});
+		}
+		let o = offset || this.offset;
+		const offsetSpecified = (offset != null),
+			b = this.buffer;
+		let year, month, monthIndex, day, hours, minutes, seconds;
+		if (date instanceof Date) {
+			[year, monthIndex, day, hours, minutes, seconds] = [date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate(), date.getUTCHours(), date.getUTCMinutes(), date.getUTCSeconds()];
+		} else {
+			({
+				year,
+				month,
+				day,
+				hours,
+				minutes,
+				seconds
+			} = date);
+			monthIndex = month--;
+		}
+		b[bigEndian ? 'writeUInt16BE' : 'writeUInt16LE'](year, o);
+		b.writeUInt8(monthIndex, o = o + 2);
+		b.writeUInt8(day, ++o);
+		b.writeUInt8(hours, ++o);
+		b.writeUInt8(minutes, ++o);
+		b.writeUInt8(seconds, ++o);
+		if (!offsetSpecified) {
+			this.offset += 7;
+		}
+		return this;
+	}
 
 	/**
 	 * 
@@ -282,6 +328,13 @@ class BufferIOWriter extends BufferIO {
 	 * see {@link BufferIOWriter#Int}
 	 */
 	IntBE(value, offset, byteLength) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				byteLength
+			} = offset || {});
+		}
+		byteLength = byteLength || 6; // byteLength <integer> Number of bytes to read. Must satisfy 0 < byteLength <= 6.
 		return this._executeWriteAndIncrement(byteLength, Buffer.prototype.writeIntBE, value, offset, byteLength);
 	}
 
@@ -289,6 +342,13 @@ class BufferIOWriter extends BufferIO {
 	 * see {@link BufferIOWriter#Int}
 	 */
 	IntLE(value, offset, byteLength) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				byteLength
+			} = offset || {});
+		}
+		byteLength = byteLength || 6; // byteLength <integer> Number of bytes to read. Must satisfy 0 < byteLength <= 6.
 		return this._executeWriteAndIncrement(byteLength, Buffer.prototype.writeIntLE, value, offset, byteLength);
 	}
 
@@ -327,14 +387,21 @@ class BufferIOWriter extends BufferIO {
 	 * @return {number} - Value read.
 	 */
 
-	UInt(value, offset, byteLength) {
-		return (this.bigEndian ? this.UIntBE : this.UIntLE).call(this, value, offset, byteLength);
+	UInt(value, offset, byteLength){
+			return (this.bigEndian ? this.UIntBE : this.UIntLE).call(this, value, offset, byteLength);
 	}
 
 	/**
 	 * see {@link BufferIOWriter#Int}
 	 */
 	UIntBE(value, offset, byteLength) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				byteLength
+			} = offset || {});
+		}
+		byteLength = byteLength || 6;
 		return this._executeWriteAndIncrement(byteLength, Buffer.prototype.writeUIntBE, value, offset, byteLength);
 	}
 
@@ -342,6 +409,13 @@ class BufferIOWriter extends BufferIO {
 	 * see {@link BufferIOWriter#Int}
 	 */
 	UIntLE(value, offset, byteLength) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				byteLength
+			} = offset || {});
+		}
+		byteLength = byteLength || 6;
 		return this._executeWriteAndIncrement(byteLength, Buffer.prototype.writeUIntLE, value, offset, byteLength);
 	}
 

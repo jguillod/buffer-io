@@ -34,7 +34,7 @@ describe('Performance', () => {
 
   it('prints some performance figures', () => {
     run('Read UInt8', readUint8, 50000);
-    run('Read BigUInt64', readString, 50000);
+    run('Read BigUInt64', readBigUInt64, 50000);
     run('Read String', readString, 50000);
     console.log('');
     console.log(table.toString());

@@ -22,8 +22,9 @@ class BufferIOReader extends BufferIO {
 	/**
 	 * Read a string
 	 * @param {object} [options|offset] params can be set as an object or in arguments in this order: offset, length, encoding.
-	 * @param {object} [options.length=0] number of bytes to read (byte length ≠ char length depending on encoding).
+	 * @param {object} [options.length] number of bytes to read (byte length ≠ char length depending on encoding).
 	 * When not specified, will read to the end of buffer.
+	 * When `0` will return an empty string and offset is not updated even if specified.
 	 * @param {object} [options.offset] Number of bytes to skip before starting to read string.
 	 *  Default to current reader offset.
 	 * @param {object} [options.encoding=utf8] The character encoding of string
@@ -38,27 +39,12 @@ class BufferIOReader extends BufferIO {
 				encoding
 			} = offset || {});
 		}
+		if(length === 0) return ''; // do nothing !
 		const offsetSpecified = (offset != null);
 		offset = offset || this.offset;
-		length = length || 0;
+		length = length ?? Number.MAX_VALUE; // jshint ignore: line
 		encoding = encoding || 'utf8';
 
-		// ({
-		// 	offset,
-		// 	length,
-		// 	encoding
-		// } = defaults({
-		// 	offset,
-		// 	length,
-		// 	encoding
-		// }, {
-		// 	offset: this.offset,
-		// 	length: null,
-		// 	encoding: 'utf8'
-		// }));
-		if (length === 0) {
-			return '';
-		}
 		const val = this.buffer.toString(encoding, offset, offset + length);
 		if (!offsetSpecified) {
 			this.offset += length;
@@ -116,6 +102,50 @@ class BufferIOReader extends BufferIO {
 		return val;
 	}
 
+	/**
+	 * datetime as for the characterisric "org.bluetooth.characteristic.date_time".
+	 * <Characteristic xsi:noNamespaceSchemaLocation="http://schemas.bluetooth.org/Documents/characteristic.xsd"
+	 *    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" type="org.bluetooth.characteristic@date_time"
+	 *    name="Date Time" uuid="2A08">
+	 * @param {integer|Object} options offset value or options object as follows:
+	 * @param {integer} [options.offset] Number of bytes to skip before starting to write string.
+	 * @param {boolean} [options.bigEndian=false] Number of bytes to skip before starting to write string.
+	 * @param {boolean} [bigEndian=false] ignored if options is an Object.
+	 * @returns {Date} either the date read, or an object {year, month, day, hours, minutes, seconds} if date
+	 * is not constructible
+	 */
+	datetime(offset, bigEndian = false) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				bigEndian = false
+			} = offset || {});
+		}
+		let o = offset || this.offset;
+		const b = this.buffer,
+			offsetSpecified = (offset != null),
+			year = b[bigEndian ? 'readUInt16BE' : 'readUInt16LE'](o),
+			month = b.readUInt8(o = o + 2),
+			day = b.readUInt8(++o),
+			hours = b.readUInt8(++o),
+			minutes = b.readUInt8(++o),
+			seconds = b.readUInt8(++o);
+		if (!offsetSpecified) {
+			this.offset += 7;
+		}
+		// year === 0 => Year is not known
+		// month === 0 => Month is not known
+		// day === 0 => Day is not known
+		const d = (year && month && day) ? new Date(Date.UTC(year, month - 1, day, hours, minutes, seconds)) : null;
+		return d instanceof Date ? d : {
+			year,
+			month,
+			day,
+			hours,
+			minutes,
+			seconds
+		};
+	}
 
 	/**
 	 * 
@@ -258,6 +288,13 @@ class BufferIOReader extends BufferIO {
 	 * see {@link BufferIOReader#Int}
 	 */
 	IntBE(offset, byteLength) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				byteLength
+			} = offset || {});
+		}
+		byteLength = byteLength || 6;
 		return this._executeReadAndIncrement(byteLength, Buffer.prototype.readIntBE, offset, byteLength);
 	}
 
@@ -265,6 +302,13 @@ class BufferIOReader extends BufferIO {
 	 * see {@link BufferIOReader#Int}
 	 */
 	IntLE(offset, byteLength) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				byteLength
+			} = offset || {});
+		}
+		byteLength = byteLength || 6;
 		return this._executeReadAndIncrement(byteLength, Buffer.prototype.readIntLE, offset, byteLength);
 	}
 
@@ -313,6 +357,13 @@ class BufferIOReader extends BufferIO {
 	 * see {@link BufferIOReader#UInt}
 	 */
 	UIntBE(offset, byteLength) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				byteLength
+			} = offset || {});
+		}
+		byteLength = byteLength || 6; // byteLength <integer> Number of bytes to read. Must satisfy 0 < byteLength <= 6.
 		return this._executeReadAndIncrement(byteLength, Buffer.prototype.readUIntBE, offset, byteLength);
 	}
 
@@ -320,6 +371,13 @@ class BufferIOReader extends BufferIO {
 	 * see {@link BufferIOReader#UInt}
 	 */
 	UIntLE(offset, byteLength) {
+		if (typeof offset === 'object') {
+			({
+				offset,
+				byteLength
+			} = offset || {});
+		}
+		byteLength = byteLength || 6; // byteLength <integer> Number of bytes to read. Must satisfy 0 < byteLength <= 6.
 		return this._executeReadAndIncrement(byteLength, Buffer.prototype.readUIntLE, offset, byteLength);
 	}
 

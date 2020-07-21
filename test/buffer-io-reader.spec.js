@@ -1,4 +1,4 @@
-/* jshint "bigint": true */
+/* jshint bigint: true */
 
 const _ = require('lodash');
 const expect = require('chai').expect;
@@ -25,6 +25,21 @@ describe('BufferIOReader', () => {
 		FUNCTION_NAMES.forEach(name => {
 			expect((reader[name] === reader[name.toLowerCase()])).to.be.true;
 		});
+	});
+
+	it('should get Uint with 0 < byteLength <= 6', () => {
+		for (let byteLength = 1; byteLength <= 6; byteLength++) {
+			const reader = new BufferIOReader(buf),
+			val = reader.UIntLE({ byteLength });
+			expect(val, val).to.equal(buf.readUIntLE(0, byteLength));
+		}
+	});
+
+	it('should get int with 0 < byteLength <= 6', () => {
+		for (let byteLength = 1; byteLength <= 6; byteLength++) {
+			const reader = new BufferIOReader(Buffer.from(_.range(0, Math.pow(2, 8), false)));
+			expect(reader.IntLE({ byteLength })).to.equal(reader.getBuffer().readIntLE(0, byteLength));
+		}
 	});
 
 	it('should get Uint8', () => {
@@ -146,7 +161,11 @@ describe('BufferIOReader', () => {
 
 	it('should return empty String when length is 0', () => {
 		const reader = new BufferIOReader(buf);
-		expect(reader.AsString()).to.eql('');
+		expect(reader.AsString({length: 0})).to.eql('');
+	});
+	it('should return full String when length is undefined', () => {
+		const reader = new BufferIOReader(buf);
+		expect(reader.AsString()).to.eql(buf.toString());
 	});
 
 	it('buffer should not be modified', () => {
