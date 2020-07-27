@@ -1,6 +1,6 @@
 {
   "name": "@imed.ch/buffer-io",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Buffer reader and writer utility",
   "author": {
     "name": "Joël F Guillod",
